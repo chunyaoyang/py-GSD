@@ -12,27 +12,36 @@ import os
 import sys
 
 
-#==============================================================================
-survey_dir = '/Users/chunyaoyang/GitHub/py-GSD'
-# site = 'Bear'
-# XS = '4'
-# img_out = site+'_XS'+XS
-# 
-# 
-# gs_csv = '%s/%s_PebbleCount_XS%s.csv' % (survey_dir, site, XS)
-#==============================================================================
 
 
-## utility to check if directory exists, if not, create it
-def check_dir(f):
-    d = os.path.dirname(f)
-    if not os.path.isdir(d):
-        os.makedirs(d)
-    return
+def run(self):
+    # Get the number of arguments
+    numArgs = len(sys.argv)
+    # Check there are only 2 input argument (i.e., the input file
+    # and output base).
+    # Note that argument 0 (i.e., sys.argv[0]) is the name
+    # of the script uncurrently running.
+    if numArgs == 3:
+        # Retrieve the input directory
+        filePath = sys.argv[1]
+        # Retrieve the output file
+        summaryCSV = sys.argv[2]
+
+        # Check input file path exists and is a directory
+        if not os.path.exists(filePath):
+            print 'Filepath does not exist'
+        elif not os.path.isdir(filePath):
+            print 'Filepath is not a directory!'
+    else:
+        print "ERROR. Command should have the form:"
+        print "python gsdplot.py <Input File Path> <Output File>"
 
 
-def find_csv_filenames(survey_dar, suffix=".csv" ):
-    filenames = os.listdir(survey_dar)
+
+
+
+def find_csv_filenames(filePath, suffix=".csv" ):
+    filenames = os.listdir(filePath)
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
 
 
@@ -46,7 +55,7 @@ def read_csv():
             gs_data = pd.read_csv(f_fullpath, usecols=['size class', 'count'], nrows=18)
             return gs_data        
 
-print gs_data
+
 
 
 #==============================================================================
