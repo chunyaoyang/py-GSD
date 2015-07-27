@@ -32,6 +32,7 @@ def run(self):
             print 'Filepath does not exist'
         elif not os.path.isdir(filePath):
             print 'Filepath is not a directory!'
+        return
     else:
         print "ERROR. Command should have the form:"
         print "python gsdplot.py <Input File Path> <Output File>"
@@ -47,11 +48,12 @@ def find_csv_filenames(filePath, suffix=".csv" ):
 
     
 def read_csv():
-    f_list = find_csv_filenames(survey_dir)
+    f_list = find_csv_filenames()
     keyword = 'PebbleCount'
+    print f_list
     for f in f_list:
         if f in keyword:
-            f_fullpath = '%s/%s' % (survey_dir, f)
+            f_fullpath = '%s/%s' % (filePath, f)
             gs_data = pd.read_csv(f_fullpath, usecols=['size class', 'count'], nrows=18)
             return gs_data        
 
