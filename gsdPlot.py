@@ -17,7 +17,7 @@ def find_csv_filenames(filePath, suffix=".csv" ):
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
 
 
-
+#compute percents finer in order of ascending size
 def cum_pass(gs_data):
     gs_data.loc[gs_data['size class'] == '<1', ['size class']] = '0.5'
     gs_data = gs_data.astype('float').sort('size class')
@@ -55,21 +55,36 @@ def getInterpolatedValue(df, x):
         df = df.sort_index().interpolate(method='index') 
     return df
 
+#extrapolate D0 for computing geometric mean size and geometric standard deviation
+def extrapolate_zero(df):
+    if 0 not in df.index:
+        dzero = df.iget(1)+(((df.iget(0)-df.iget(1))/(df.index[0]-df.index[1]))*(-df.index[1]))
+        df.set_value(0, dzero)
+        df = df.sort_index()
+    return df
 
-
-def calothers(gs_data):  
-    #remove dropna 
-    df = pd.Series(index=gs_data.pass_perc, data=gs_data.log2_size.values)  #data=gs_data.log2_size
+def calothers(gs_data):   
+    df = pd.Series(index=gs_data.pass_perc, data=gs_data.log2_size.values)   
+    df = extrapolate_zero(df)
+    mean_psi = 0  #mean grain size on psi scale
+    sd_psi = 0   #SD on psi scale 
     
-    
+    #compute mean grain size on psi scale
+    for i in range(len(df.index)):
+        if i+1 < len(df.index):
+            a = (df.iget(i+1)+df.iget(i))*0.5*(df.index[i+1]-df.index[i])/100
+            mean_psi += a
+    #compute SD on psi scale        
+    for i in range(len(df.index)):
+        if i+1 < len(df.index):
+            a = np.square(((df.iget(i+1)+df.iget(i))*0.5)-mean_psi)*(df.index[i+1]-df.index[i])/100
+            sd_psi += a
+   
     #compute D16, D50, D84
     df = getInterpolatedValue(df, 50)
     df = getInterpolatedValue(df, 16)
     df = getInterpolatedValue(df, 84)
-    
-
-
-    return [round(2**df[16], 3), round(2**df[50], 3), round(2**df[84], 3)]  ###### dx = 2^df[x], GeoMeanSize, SD need to be added
+    return [round(2**df[16], 3), round(2**df[50], 3), round(2**df[84], 3), round(2**mean_psi, 3), round(2**np.sqrt(sd_psi), 3)]  
 
 
 def read_csv(survey_dir, summaryCSV):
@@ -81,7 +96,7 @@ def read_csv(survey_dir, summaryCSV):
     f_list = find_csv_filenames(survey_dir)
     keyword = 'PebbleCount'
     
-    summary_df = pd.DataFrame(columns=['d16','d50','d84'])      ############ Geometric mean size, SD need to be added
+    summary_df = pd.DataFrame(columns=['d16','d50','d84','Geometric mean size','SD'])
     is_process = False
     
     for f in f_list:
