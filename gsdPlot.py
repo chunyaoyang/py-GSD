@@ -2,6 +2,16 @@
 """
 Created on Sun Jul 19 08:29:53 2015
 
+Get D16, D50, D84, Geometric Mean Size, Geometric Standard Deviation and Plot the Grain Size Distribution
+based on pebble count result.
+
+Require: csv files of pebble count result
+Desired format:  
+filename: <siteName>_PebbleCount_XS<no.>.csv
+setup csv files for first column: [size class], unit: millimeter, second column: [count]
+
+and run $python gsplot.py <FolderPath> <Summary.CSV>
+
 @author: chunyaoyang
 """
 
