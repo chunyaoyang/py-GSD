@@ -12,7 +12,7 @@ setup csv files for first column: [size class], unit: millimeter, second column:
 
 and run $python gsplot.py <FolderPath> <Summary.CSV>
 
-@author: chunyaoyang
+@author: chunyaoyang, pha
 """
 
 import pandas as pd
