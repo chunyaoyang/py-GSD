@@ -26,7 +26,6 @@ def cum_pass(gs_data):
     gs_data['perc'] = gs_data['count']/gs_data['count'].sum()
     gs_data['count_sum'] = gs_data['count'].cumsum()
     gs_data['pass_perc'] = (gs_data['count_sum']/gs_data['count'].sum())*100
-    print (gs_data)
     return gs_data
 
 
@@ -119,7 +118,7 @@ def read_csv(survey_dir, summaryCSV):
             title = f[0:f.find('_')] + "_" + f[f.rfind('_') + 1:f.rfind('.')]
             gs_data = cum_pass(gs_data)
             reduce_gs_data = reduce_data(gs_data, 100)
-            plot(reduce_gs_data, survey_dir, title, "png")
+            plot(reduce_gs_data, survey_dir, title, "eps")
             summary_data = calothers(gs_data)
             summary_df.loc[f[f.rfind('_') + 1:f.rfind('.')]] = summary_data
     
