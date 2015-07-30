@@ -95,15 +95,15 @@ def calothers(gs_data):
     df = getInterpolatedValue(df, 84)
     return [round(2**df[16], 3), round(2**df[50], 3), round(2**df[84], 3), round(2**mean_psi, 3), round(2**np.sqrt(sd_psi), 3)]  
 
-def reduce_data(origin_data, count_sum):
+def reduce_data(origin_data, pass_perc):
     start = 0
-    end = len(origin_data["count_sum"])
+    end = len(origin_data["pass_perc"])
     
     last_val = -1
     for idx, val in enumerate(origin_data["pass_perc"]):
         if val != 0 and last_val == 0:
             start = idx - 1
-        if val == count_sum:
+        if val == pass_perc:
             end = idx + 1
             break
         last_val = val
