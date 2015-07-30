@@ -129,7 +129,7 @@ def read_csv(survey_dir, summaryCSV):
             gs_data = cum_pass(gs_data)
             reduce_gs_data = reduce_data(gs_data, 100)
             plot(reduce_gs_data, survey_dir, title, "eps")
-            summary_data = calothers(gs_data)
+            summary_data = calothers(reduce_gs_data)
             summary_df.loc[f[f.rfind('_') + 1:f.rfind('.')]] = summary_data
     
     if is_process:
