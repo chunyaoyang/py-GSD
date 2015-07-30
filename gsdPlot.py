@@ -98,7 +98,7 @@ def calothers(gs_data):
 def reduce_data(origin_data, count_sum):
     end = len(origin_data["count_sum"])
     
-    for idx, val in enumerate(origin_data["count_sum"]):
+    for idx, val in enumerate(origin_data["pass_perc"]):
         if val == 100:
             end = idx + 1
             break
