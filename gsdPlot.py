@@ -96,13 +96,18 @@ def calothers(gs_data):
     return [round(2**df[16], 3), round(2**df[50], 3), round(2**df[84], 3), round(2**mean_psi, 3), round(2**np.sqrt(sd_psi), 3)]  
 
 def reduce_data(origin_data, count_sum):
+    start = 0
     end = len(origin_data["count_sum"])
     
+    last_val = -1
     for idx, val in enumerate(origin_data["pass_perc"]):
-        if val == 100:
+        if val != 0 and last_val == 0:
+            start = idx - 1
+        if val == count_sum:
             end = idx + 1
             break
-    reduce_gs_data = origin_data[:end]
+        last_val = val
+    reduce_gs_data = origin_data[start:end]
 
     return reduce_gs_data
 
