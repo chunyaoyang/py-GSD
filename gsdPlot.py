@@ -2,7 +2,17 @@
 """
 Created on Sun Jul 19 08:29:53 2015
 
-@author: chunyaoyang
+Get D16, D50, D84, Geometric Mean Size, Geometric Standard Deviation and Plot the Grain Size Distribution
+based on pebble count result.
+
+Require: csv files of pebble count result
+Desired format:  
+filename: <siteName>_PebbleCount_XS<no.>.csv
+setup csv files for first column: [size class], unit: millimeter, second column: [count]
+
+and run $python gsplot.py <FolderPath> <Summary.CSV>
+
+@author: chunyaoyang, phantasise
 """
 
 import pandas as pd
@@ -26,7 +36,6 @@ def cum_pass(gs_data):
     gs_data['perc'] = gs_data['count']/gs_data['count'].sum()
     gs_data['count_sum'] = gs_data['count'].cumsum()
     gs_data['pass_perc'] = (gs_data['count_sum']/gs_data['count'].sum())*100
-    print gs_data
     return gs_data
 
 
@@ -86,6 +95,16 @@ def calothers(gs_data):
     df = getInterpolatedValue(df, 84)
     return [round(2**df[16], 3), round(2**df[50], 3), round(2**df[84], 3), round(2**mean_psi, 3), round(2**np.sqrt(sd_psi), 3)]  
 
+def reduce_data(origin_data, count_sum):
+    end = len(origin_data["count_sum"])
+    
+    for idx, val in enumerate(origin_data["pass_perc"]):
+        if val == 100:
+            end = idx + 1
+            break
+    reduce_gs_data = origin_data[:end]
+
+    return reduce_gs_data
 
 def read_csv(survey_dir, summaryCSV):
     if not os.path.exists(survey_dir):
@@ -108,7 +127,8 @@ def read_csv(survey_dir, summaryCSV):
             gs_data = pd.read_csv(f_fullpath, usecols=['size class', 'count'], nrows=18)
             title = f[0:f.find('_')] + "_" + f[f.rfind('_') + 1:f.rfind('.')]
             gs_data = cum_pass(gs_data)
-            plot(gs_data, survey_dir, title)
+            reduce_gs_data = reduce_data(gs_data, 100)
+            plot(reduce_gs_data, survey_dir, title, "eps")
             summary_data = calothers(gs_data)
             summary_df.loc[f[f.rfind('_') + 1:f.rfind('.')]] = summary_data
     
