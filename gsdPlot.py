@@ -44,6 +44,7 @@ def plot(df, path, title, ext='eps'):
     plt.clf()
     x = df.loc[:,'size class']
     y = df.loc[:,'pass_perc']
+    
         
     plt.subplot(111)
     plt.plot(x, y, color='black')
@@ -65,35 +66,47 @@ def getInterpolatedValue(df, x):
     return df
 
 #extrapolate D0 for computing geometric mean size and geometric standard deviation
-def extrapolate_zero(df):
-    if 0 not in df.index:
-        dzero = df.iget(1)+(((df.iget(0)-df.iget(1))/(df.index[0]-df.index[1]))*(-df.index[1]))
-        df.set_value(0, dzero)
-        df = df.sort_index()
-    return df
+#def extrapolate_zero(df):
+#    if len(df) > 1:
+#        if 0 not in df.index:
+#            dzero = df.iget(1)+(((df.iget(0)-df.iget(1))/(df.index[0]-df.index[1]))*(-df.index[1]))
+#            df.set_value(0, dzero)
+#            df = df.sort_index()
+#    if len(df) == 1:
+#        dzero = df.iloc[0]
+#        df.set_value(0, dzero)
+#        df = df.sort_index()
+#    return df
 
 def calothers(gs_data):   
-    df = pd.Series(index=gs_data.pass_perc, data=gs_data.log2_size.values)   
-    df = extrapolate_zero(df)
-    mean_psi = 0  #mean grain size on psi scale
-    sd_psi = 0   #SD on psi scale 
-    
-    #compute mean grain size on psi scale
-    for i in range(len(df.index)):
-        if i+1 < len(df.index):
-            a = (df.iget(i+1)+df.iget(i))*0.5*(df.index[i+1]-df.index[i])/100
-            mean_psi += a
-    #compute SD on psi scale        
-    for i in range(len(df.index)):
-        if i+1 < len(df.index):
-            a = np.square(((df.iget(i+1)+df.iget(i))*0.5)-mean_psi)*(df.index[i+1]-df.index[i])/100
-            sd_psi += a
+    df = pd.Series(index=gs_data.pass_perc, data=gs_data.log2_size.values)
+#    df = extrapolate_zero(df)
+#    mean_psi = 0  #mean grain size on psi scale
+#    sd_psi = 0   #SD on psi scale 
+#    
+#    #compute mean grain size on psi scale
+#    for i in range(len(df.index)):
+#        if i+1 < len(df.index):
+#            a = (df.iget(i+1)+df.iget(i))*0.5*(df.index[i+1]-df.index[i])/100
+#            mean_psi += a
+#            break
+#    #compute SD on psi scale        
+#    for i in range(len(df.index)):
+#        if i+1 < len(df.index):
+#            a = np.square(((df.iget(i+1)+df.iget(i))*0.5)-mean_psi)*(df.index[i+1]-df.index[i])/100
+#            sd_psi += a
+#            break
    
     #compute D16, D50, D84
     df = getInterpolatedValue(df, 50)
     df = getInterpolatedValue(df, 16)
     df = getInterpolatedValue(df, 84)
-    return [round(2**df[16], 3), round(2**df[50], 3), round(2**df[84], 3), round(2**mean_psi, 3), round(2**np.sqrt(sd_psi), 3)]  
+    df = getInterpolatedValue(df, 25)
+    df = getInterpolatedValue(df, 75)
+    dmin=df.min(); d16=df[16].min(); d25=df[25].min(); d50=df[50].min(); d75=df[75].min(); d84=df[84].min() #choose the smaller value if there are more than one
+
+
+    return [round(2**dmin,3), round(2**d16, 3), round(2**d25, 3), round(2**d50, 3), round(2**d75, 3), round(2**d84, 3), round(2**df[100], 3)]  
 
 def reduce_data(origin_data, pass_perc):
     start = 0
@@ -118,9 +131,10 @@ def read_csv(survey_dir, summaryCSV):
         print('Filepath is not a directory!')
     
     f_list = find_csv_filenames(survey_dir)
+    print f_list
     keyword = 'PebbleCount'
     
-    summary_df = pd.DataFrame(columns=['d16','d50','d84','Geometric mean size','SD'])
+    summary_df = pd.DataFrame(columns=['dmin','d16','d25','d50','d75','d84','d100'])
     is_process = False
     
     for f in f_list:
