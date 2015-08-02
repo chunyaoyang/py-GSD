@@ -16,6 +16,7 @@ and run $python gsplot.py <FolderPath> <Summary.CSV>
 """
 
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -23,8 +24,14 @@ import sys
 
 
 def find_csv_filenames(filePath, suffix=".csv" ):
-    filenames = os.listdir(filePath)
-    return [ filename for filename in filenames if filename.endswith( suffix ) ]
+    filenames = []
+    paths = []
+    for root, dirs, files in os.walk(filePath):
+        for file in files:
+            if file.endswith(suffix):
+                paths.append(root + "/")
+                filenames.append(file)
+    return paths, filenames
 
 
 #compute percents finer in order of ascending size
@@ -130,26 +137,25 @@ def read_csv(survey_dir, summaryCSV):
     elif not os.path.isdir(survey_dir):
         print('Filepath is not a directory!')
     
-    f_list = find_csv_filenames(survey_dir)
-    print f_list
+    f_path, f_list = find_csv_filenames(survey_dir)
+    # print f_list
     keyword = 'PebbleCount'
     
     summary_df = pd.DataFrame(columns=['dmin','d16','d25','d50','d75','d84','d100'])
     is_process = False
     
-    for f in f_list:
-        if keyword in f:
+    for idx, fname in enumerate(f_list):
+        if keyword in fname:
             if not is_process:
                 is_process = True
-            print("Process " + f + "......")
-            f_fullpath = '%s/%s' % (survey_dir, f)
-            gs_data = pd.read_csv(f_fullpath, usecols=['size class', 'count'], nrows=18)
-            title = f[0:f.find('_')] + "_" + f[f.rfind('_') + 1:f.rfind('.')]
+            print("Process " + f_path[idx] + fname + "......")
+            gs_data = pd.read_csv(f_path[idx] + fname, usecols=['size class', 'count'], nrows=18)
+            title = fname[0:fname.find('_')] + "_" + fname[fname.rfind('_') + 1:fname.rfind('.')]
             gs_data = cum_pass(gs_data)
             reduce_gs_data = reduce_data(gs_data, 100)
-            plot(reduce_gs_data, survey_dir, title, "eps")
+            plot(reduce_gs_data, f_path[idx], title, "eps")
             summary_data = calothers(reduce_gs_data)
-            summary_df.loc[f[f.rfind('_') + 1:f.rfind('.')]] = summary_data
+            summary_df.loc[fname[fname.rfind('_') + 1:fname.rfind('.')]] = summary_data
     
     if is_process:
         summary_df.to_csv(summaryCSV, encoding='utf-8')
