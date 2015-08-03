@@ -16,8 +16,6 @@ and run $python gsplot.py <FolderPath> <Summary.CSV>
 """
 
 import pandas as pd
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -138,15 +136,15 @@ def addtofnames(fnames_dict, fname, df):
         fnames_dict[fname] = list()
     fnames_dict[fname].append(df)
 
-def read_csv(survey_dir, summaryCSV):
+def read_csv(survey_dir):
     if not os.path.exists(survey_dir):
         print('Filepath does not exist')
     elif not os.path.isdir(survey_dir):
         print('Filepath is not a directory!')
     
     f_path, f_list = find_csv_filenames(survey_dir)
-    # print f_list
     keyword = 'PebbleCount'
+    
     
     summary_df = pd.DataFrame(columns=['dmin','d16','d25','d50','d75','d84','d100'])
     is_process = False
@@ -158,26 +156,30 @@ def read_csv(survey_dir, summaryCSV):
             if not is_process:
                 is_process = True
             print("Process " + f_path[idx] + fname + "......")
-            gs_data = pd.read_csv(f_path[idx] + fname, usecols=['size class', 'count'], nrows=18)
-            title = fname[0:fname.find('_')] + "_" + fname[fname.rfind('_') + 1:fname.rfind('.')]
-            gs_data = cum_pass(gs_data)
-            reduce_gs_data = reduce_data(gs_data, 100)
-            plot(reduce_gs_data, f_path[idx], title, "png")
-            addtofnames(same_fnames, fname, reduce_gs_data)
-            summary_data = calothers(reduce_gs_data)
-            summary_df.loc[fname[fname.rfind('_') + 1:fname.rfind('.')]] = summary_data
-    
-    if is_process:
-        summary_df.to_csv(summaryCSV, encoding='utf-8')
+            try:
+                gs_data = pd.read_csv(f_path[idx] + fname, usecols=['size class', 'count'], nrows=18)
+                title = fname[0:fname.find('_')] + "_" + fname[fname.rfind('_') + 1:fname.rfind('.')]
+                gs_data = cum_pass(gs_data)
+                reduce_gs_data = reduce_data(gs_data, 100)
+                plot(reduce_gs_data, f_path[idx], title, "eps")
+                addtofnames(same_fnames, fname, reduce_gs_data)
+                summary_data = calothers(reduce_gs_data)
+                summary_df.loc[fname[fname.rfind('_') + 1:fname.rfind('.')]] = summary_data
+                out_csv = f_path[idx] + fname[0:fname.find('_')] + '_summary.csv'
+                summary_df.to_csv(out_csv, encoding='utf-8')
+        
+            except ValueError:
+                print "Read Error...Skip"
+                pass
         
     for key, value in same_fnames.iteritems():
         if len(value) > 1:
-            multiplot.plot(value, ".", key[0:key.find('_')] + "_" + key[key.rfind('_') + 1:key.rfind('.')], "png")
+            multiplot.plot(value, survey_dir, key[0:key.find('_')] + "_" + key[key.rfind('_') + 1:key.rfind('.')], "eps")
         
 if __name__ == '__main__':
-    if len(sys.argv) == 3:
-        read_csv(sys.argv[1], sys.argv[2])
+    if len(sys.argv) == 2:
+        read_csv(sys.argv[1])
     else:
         print("ERROR. Command should have the form:")
-        print("python gsdplot.py <Input File Path> <Output File>")
+        print("python gsdplot.py <Input File Path>")
         exit(1)
