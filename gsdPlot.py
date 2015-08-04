@@ -141,36 +141,37 @@ def read_csv(survey_dir):
         print('Filepath does not exist')
     elif not os.path.isdir(survey_dir):
         print('Filepath is not a directory!')
-    
-    f_path, f_list = find_csv_filenames(survey_dir)
+
     keyword = 'PebbleCount'
-    
     
     summary_df = pd.DataFrame(columns=['dmin','d16','d25','d50','d75','d84','d100'])
     is_process = False
     
     same_fnames = dict()
     
-    for idx, fname in enumerate(f_list):
-        if keyword in fname:
-            if not is_process:
-                is_process = True
-            print("Process " + f_path[idx] + fname + "......")
-            try:
-                gs_data = pd.read_csv(f_path[idx] + fname, usecols=['size class', 'count'], nrows=18)
-                title = fname[0:fname.find('_')] + "_" + fname[fname.rfind('_') + 1:fname.rfind('.')]
-                gs_data = cum_pass(gs_data)
-                reduce_gs_data = reduce_data(gs_data, 100)
-                plot(reduce_gs_data, f_path[idx], title, "eps")
-                addtofnames(same_fnames, fname, reduce_gs_data)
-                summary_data = calothers(reduce_gs_data)
-                summary_df.loc[fname[fname.rfind('_') + 1:fname.rfind('.')]] = summary_data
-                out_csv = f_path[idx] + fname[0:fname.find('_')] + '_summary.csv'
-                summary_df.to_csv(out_csv, encoding='utf-8')
-        
-            except ValueError:
-                print "Read Error...Skip"
-                pass
+    suffix = ".csv"
+    for root, dirs, files in os.walk(survey_dir):
+        f_path = root + "/"
+        out_csv = ""
+        for fname in files:
+            if fname.endswith(suffix) and keyword in fname:
+                print("Process " + f_path + fname + "......")
+                try:
+                    gs_data = pd.read_csv(f_path + fname, usecols=['size class', 'count'], nrows=18)
+                    title = fname[0:fname.find('_')] + "_" + fname[fname.rfind('_') + 1:fname.rfind('.')]
+                    gs_data = cum_pass(gs_data)
+                    reduce_gs_data = reduce_data(gs_data, 100)
+                    plot(reduce_gs_data, f_path, title, "eps")
+                    addtofnames(same_fnames, fname, reduce_gs_data)
+                    summary_data = calothers(reduce_gs_data)
+                    summary_df.loc[fname[fname.rfind('_') + 1:fname.rfind('.')]] = summary_data
+                    out_csv = f_path + fname[0:fname.find('_')] + '_summary.csv'
+                    
+                except ValueError:
+                    print "Read Error...Skip"
+                    pass
+        if out_csv != "":
+            summary_df.to_csv(out_csv, encoding='utf-8')
         
     for key, value in same_fnames.iteritems():
         if len(value) > 1:
